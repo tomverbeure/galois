@@ -1,0 +1,6 @@
+
+read_verilog galois.v tb.v
+hierarchy -auto-top
+#synth_ice40 -nobram
+synth_ice40 
+write_verilog tb.gate.v
