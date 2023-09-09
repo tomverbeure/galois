@@ -36,8 +36,13 @@ class SymNode:
     def __init__(self):
         pass
 
+    def flatten(self):
+        return "<SymNode>"
 
-class SymLeafSymbol(SymNode):
+    def __repr__(self):
+        return self.flatten()
+
+class SymSymbol(SymNode):
     def __init__(self, s):
         self.s      = s
     
@@ -52,6 +57,17 @@ class SymLeafValue(SymNode):
     def flatten(self):
         s = f"({self.val})"
         return s
+
+
+class SymZero(SymLeafValue):
+    def __init__(self):
+        super().__init__(0)
+        pass
+
+class SymOne(SymLeafValue):
+    def __init__(self):
+        super().__init__(1)
+        pass
 
 class SymFactor(SymNode):
     def __init__(self, a, b):
@@ -71,11 +87,19 @@ class SymSum(SymNode):
         s = f"({self.node_a.flatten()} ^ {self.node_b.flatten()})"
         return s
 
+class SymSumVector(SymNode):
+    def __init__(self, vec):
+        self.vec  = vec
+
+    def flatten(self):
+        s = ' ^ '.join(v.flatten() for v in self.vec)
+        return s
+
 def sym_test():
 
-    a       = SymLeafSymbol("a[0]")
-    b       = SymLeafSymbol("b[0]")
-    c       = SymLeafSymbol("c[1]")
+    a       = SymSymbol("a[0]")
+    b       = SymSymbol("b[0]")
+    c       = SymSymbol("c[1]")
     one     = SymLeafValue(1)
     zero    = SymLeafValue(0)
 
@@ -86,8 +110,6 @@ def sym_test():
     n5 = SymSum(n4, zero)
 
     print(n5.flatten())
-
-sym_test()
 
 
 def mastrovito_mul(a_coefs_in, b_coefs_in, p_coefs_in):   # Coefs are MSB first
@@ -121,6 +143,57 @@ def mastrovito_mul(a_coefs_in, b_coefs_in, p_coefs_in):   # Coefs are MSB first
 
     c_coefs.reverse()
     return c_coefs
+
+
+def verilog_mastrovito_mul(gf, opt = True):
+    p_coefs = []
+    p_coefs_sym = []
+    for i in range(gf.degree+1):
+        p_coef = (int(gf.irreducible_poly)>>i)&1
+        p_coefs.append(p_coef)
+        if p_coef == 0:
+            p_coefs_sym.append(SymZero())
+        else:
+            p_coefs_sym.append(SymOne())
+    print(p_coefs)
+
+    m_coefs = []
+
+    # Step 1: create matrix
+    # (i,j) are swapped around compared to the paper...
+
+    M = [ [ SymZero() for _ in range (gf.degree) ] for _ in range(gf.degree) ]
+
+    # M[0] = [ a_coefs[0], a_coefs[1], a_coefs[2], a_coefs[3] ]
+    for j in range(gf.degree):
+        M[0][j] = SymSymbol(f"a[%d]" % j)
+
+    for i in range(1, gf.degree):       # Go throug all rows
+        M[i][0] = M[i-1][gf.degree-1]
+
+        for j in range(1, gf.degree):       # Go throug all columns
+            if opt:
+                if p_coefs[j] == 1:
+                    M[i][j] = M[i-1][j-1]
+                else:
+                    M[i][j] = SymSum(M[i-1][j-1], M[i-1][gf.degree-1])
+            else:
+                M[i][j] = SymSum(M[i-1][j-1], SymFactor(M[i-1][gf.degree-1], p_coefs_sym[j]))
+
+            m_coef = SymSymbol(f"m_%d_%d" % (i,j))
+            m_coefs.append([ m_coef, M[i][j] ])
+            M[i][j] = m_coef
+
+    c_coefs = []
+    for j in range(gf.degree):
+        c_j = SymSumVector([ SymFactor(M[i][j], SymSymbol(f"b[%d]"%i)) for i in range(gf.degree) ])
+        c_coefs.append(c_j)
+
+    print(m_coefs)
+    print(M)
+    print(c_coefs)
+
+    return 
 
 if False:
     GF2 = galois.GF(2)
@@ -164,3 +237,12 @@ if False:
                 print(c_coefs)
                 print(c_coefs_m)
                 print("MISMATCH!")
+
+if False:
+    sym_test()
+
+if True:
+    gf = galois.GF(2**4)
+
+    s = verilog_mastrovito_mul(gf)
+    print(s)
