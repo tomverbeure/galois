@@ -1,6 +1,0 @@
-
-read_verilog galois.v tb.v
-hierarchy -top galois_tb_mul_mastrovito
-#synth_ice40 -nobram
-synth_ice40 
-write_verilog tb.gate.v

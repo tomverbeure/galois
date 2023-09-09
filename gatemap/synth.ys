@@ -1,0 +1,11 @@
+read_verilog ../verilog/traditional_ab_mod_p_8.v
+hierarchy -auto-top
+proc
+techmap
+clean
+stat
+
+dfflibmap -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib
+clean
+stat
