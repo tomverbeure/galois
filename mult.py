@@ -1,24 +1,7 @@
 #! /usr/bin/env python3
 
 import galois
-
-#a = galois.Poly([1,0,1,1])
-#b = galois.Poly([1,1,0,1])
-#
-#print(a)
-#print(b)
-#print(a*b)
-#
-#
-## all irreducible polys for GF(2^4):
-#list(galois.irreducible_polys(2,4))
-#
-#
-## gs24 is a class
-#gf24 = galois.GF(2**4)
-#print(gf24.properties)
-#
-#a = gf24([1,1,1,1,1])
+from sym import *
 
 def verilog_gf_poly2power(gf, name = None):
     name = "gf_poly2power_%d" % gf.degree
@@ -138,9 +121,82 @@ module %s(
 
     return str
 
-def verilog_poly_mod_master_step1(gf):
+def verilog_poly_mul_mastrovito(gf, opt = True):
+    p_coefs = []
+    p_coefs_sym = []
+    for i in range(gf.degree+1):
+        p_coef = (int(gf.irreducible_poly)>>i)&1
+        p_coefs.append(p_coef)
+        if p_coef == 0:
+            p_coefs_sym.append(SymZero())
+        else:
+            p_coefs_sym.append(SymOne())
+    #print(p_coefs)
 
-    # Matrix M[degree][degree] (row/column)
+    m_coefs = []
+
+    # Step 1: create matrix
+    # (i,j) are swapped around compared to the paper...
+
+    M = [ [ SymZero() for _ in range (gf.degree) ] for _ in range(gf.degree) ]
+
+    # M[0] = [ a_coefs[0], a_coefs[1], a_coefs[2], a_coefs[3] ]
+    for j in range(gf.degree):
+        M[0][j] = SymSymbol(f"a[%d]" % j)
+
+    for i in range(1, gf.degree):       # Go throug all rows
+        M[i][0] = M[i-1][gf.degree-1]
+
+        for j in range(1, gf.degree):       # Go throug all columns
+            if opt:
+                if p_coefs[j] == 1:
+                    M[i][j] = M[i-1][j-1]
+                else:
+                    M[i][j] = SymSum(M[i-1][j-1], M[i-1][gf.degree-1])
+            else:
+                M[i][j] = SymSum(M[i-1][j-1], SymFactor(M[i-1][gf.degree-1], p_coefs_sym[j]))
+
+            m_coef_str = f"m_%d_%d" % (i,j)
+            m_coef = SymSymbol(m_coef_str)
+            m_coefs.append([ m_coef_str, M[i][j] ])
+            M[i][j] = m_coef
+
+    # Step 2: Multiply M with B
+    c_coefs = []
+    for j in range(gf.degree):
+        c_j = SymSumVector([ SymFactor(M[i][j], SymSymbol(f"b[%d]"%i)) for i in range(gf.degree) ])
+        c_coefs.append(c_j)
+
+    #print(m_coefs)
+    #print(M)
+    #print(c_coefs)
+
+    name = "gf_poly_mul_mastrovito_%d" % gf.degree
+
+    str = f'''
+// Mastrovito GF multiplier
+module %s(
+    input      [%d:0] poly_a,
+    input      [%d:0] poly_b,
+    output     [%d:0] poly_out
+    );
+
+    wire [%d:0] a = poly_a;
+    wire [%d:0] b = poly_b;
+
+''' % (name, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1)
+
+    for m_coef in m_coefs:
+        str += f'    wire %s = %s;\n' % (m_coef[0], m_coef[1].flatten()) 
+
+    str += '\n'
+
+    for (c_idx, c_coef) in enumerate(c_coefs):
+        str += f'    assign poly_out[%d] = %s;\n' % (c_idx, c_coef.flatten())
+
+    str += f'endmodule'
+
+    return str
     
 
 if False:
@@ -156,8 +212,13 @@ if False:
     str = verilog_poly_mult(gf)
     print(str)
 
-if True:
+if False:
     gf = galois.GF(2**4)
     str = verilog_poly_mod(gf)
+    print(str)
+
+if True:
+    gf = galois.GF(2**8)
+    str = verilog_poly_mul_mastrovito(gf)
     print(str)
 
