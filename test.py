@@ -32,6 +32,64 @@ if False:
         print(x)
         x = x * GF(2)
 
+class SymNode:
+    def __init__(self):
+        pass
+
+
+class SymLeafSymbol(SymNode):
+    def __init__(self, s):
+        self.s      = s
+    
+    def flatten(self):
+        s = f"({self.s})"
+        return s
+
+class SymLeafValue(SymNode):
+    def __init__(self, val):
+        self.val    = val
+
+    def flatten(self):
+        s = f"({self.val})"
+        return s
+
+class SymFactor(SymNode):
+    def __init__(self, a, b):
+        self.node_a  = a
+        self.node_b  = b
+
+    def flatten(self):
+        s = f"({self.node_a.flatten()} & {self.node_b.flatten()})"
+        return s
+
+class SymSum(SymNode):
+    def __init__(self, a,b):
+        self.node_a  = a
+        self.node_b  = b
+
+    def flatten(self):
+        s = f"({self.node_a.flatten()} ^ {self.node_b.flatten()})"
+        return s
+
+def sym_test():
+
+    a       = SymLeafSymbol("a[0]")
+    b       = SymLeafSymbol("b[0]")
+    c       = SymLeafSymbol("c[1]")
+    one     = SymLeafValue(1)
+    zero    = SymLeafValue(0)
+
+    n1 = SymFactor(a,b)
+    n2 = SymFactor(a,c)
+    n3 = SymFactor(c,one)
+    n4 = SymSum(n1, n2)
+    n5 = SymSum(n4, zero)
+
+    print(n5.flatten())
+
+sym_test()
+
+
 def mastrovito_mul(a_coefs_in, b_coefs_in, p_coefs_in):   # Coefs are MSB first
     GF2 = galois.GF(2)
 
@@ -64,7 +122,7 @@ def mastrovito_mul(a_coefs_in, b_coefs_in, p_coefs_in):   # Coefs are MSB first
     c_coefs.reverse()
     return c_coefs
 
-if True:
+if False:
     GF2 = galois.GF(2)
     GF16 = galois.GF(2**4)
 
