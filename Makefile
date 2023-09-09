@@ -15,5 +15,5 @@ galois.v: mult.py
 	./mult.py > galois.v
 
 clean:
-	\rm galois.v galois.h tb.gate.v
+	\rm -f galois.v galois.h tb.gate.v tb_galois 
 
