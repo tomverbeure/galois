@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import galois
+import numpy
 
 print("Galois")
 
@@ -77,12 +78,9 @@ if True:
         for b_int in range(0,16):
             print(a_int,b_int)
 
-            a_coefs = [1,1,0,1]     # MSB first
-            b_coefs = [1,1,1,1]     # MSB first
-
             a_coefs = [0] * 4
             for i in range(0,4):
-                a_coefs[3-i] = (a_int>>i)&1
+                a_coefs[3-i] = (a_int>>i)&1     # MSB first
 
             b_coefs = [0] * 4
             for i in range(0,4):
@@ -101,4 +99,10 @@ if True:
         
             #print(c_coefs)
             #print(c_coefs_m)
-            print(c_coefs == c_coefs_m)
+
+            if numpy.array_equal(c_coefs, c_coefs_m):
+                print("OK!")
+            else:
+                print(c_coefs)
+                print(c_coefs_m)
+                print("MISMATCH!")

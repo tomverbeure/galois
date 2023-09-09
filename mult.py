@@ -84,11 +84,80 @@ endmodule
 
     return str
 
-if True:
+def verilog_poly_mult(gf):
+    name = "gf_poly_mult_%d" % gf.degree
+
+    str = f'''
+// Polynomial multiplication of 2 GF numbers of the same order
+// Modulo reduction is not included
+module %s(
+    input      [%d:0] poly_a,
+    input      [%d:0] poly_b,
+    output     [%d:0] poly_out
+    );
+
+''' % (name, gf.degree-1, gf.degree-1, 2*gf.degree-2)
+
+    output_factors = [ None ] * (2*gf.degree-1)
+
+    for a_idx in range(0,gf.degree):
+        for b_idx in range(0,gf.degree):
+            o_idx = a_idx + b_idx
+            if output_factors[o_idx] is None:
+                output_factors[o_idx] = [ [a_idx, b_idx] ]
+            else:
+                output_factors[o_idx].append([a_idx, b_idx])
+
+    for o_idx, o_factors in enumerate(output_factors):
+        if o_factors is None:
+            str += f"    assign poly_out[%d] = 1'b0;\n" % o_idx;
+        else:
+            str += f'    assign poly_out[%d] = ^{{ ' % o_idx
+            str += ", ".join(["poly_a[%d] & poly_b[%d]" % (x[0], x[1]) for x in o_factors])
+
+            str += " };\n"
+
+    str += f'endmodule'
+
+    return str
+
+def verilog_poly_mod(gf):
+    name = "gf_poly_mod_%d" % gf.degree
+
+    str = f'''
+// Modulo reduction by primitive polynomial of a polynomial that was the result of a 
+// poly_mult of 2 GF numbers
+module %s(
+    input      [%d:0] poly_in,
+    output     [%d:0] poly_out
+    );
+
+''' % (name, 2*gf.degree-2, gf.degree-1)
+
+    str += f'endmodule'
+
+    return str
+
+def verilog_poly_mod_master_step1(gf):
+
+    # Matrix M[degree][degree] (row/column)
+    
+
+if False:
     gf = galois.GF(2**8)
     str = verilog_gf_poly2power(gf)
     print(str)
     print()
     str = verilog_gf_power2poly(gf)
+    print(str)
+
+if False:
+    gf = galois.GF(2**8)
+    str = verilog_poly_mult(gf)
+    print(str)
+
+if True:
+    gf = galois.GF(2**4)
+    str = verilog_poly_mod(gf)
     print(str)
 
