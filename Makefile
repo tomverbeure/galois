@@ -1,19 +1,19 @@
 
-all: tb_galois #synth
+all: ./build/tb_gf256_arith #synth
 
 synth: galois.v
 	yosys -s synth.ys
 
-tb_galois: tb_galois.cc galois.h
-	clang++ -std=c++11 -I`yosys-config --datdir`/include tb_galois.cc -o tb_galois
+./build/tb_gf256_arith: ./verif/tb_gf256_arith.cc ./build/gf256_arith.h
+	clang++ -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
 
-galois.h: galois.v
-	yosys -p "read_verilog galois.v; write_cxxrtl galois.h"
+./build/gf256_arith.h: ./build/gf256_arith.v
+	yosys -p "read_verilog $<; write_cxxrtl $@"
 
 
-galois.v: mult.py
-	./mult.py > galois.v
+./build/gf256_arith.v: ./generate/mult.py
+	./generate/mult.py > $@
 
 clean:
-	\rm -f galois.v galois.h tb.gate.v tb_galois 
+	\rm -f build/*
 

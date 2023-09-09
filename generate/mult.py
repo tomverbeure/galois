@@ -1,10 +1,11 @@
 #! /usr/bin/env python3
 
+import sys
 import galois
 from sym import *
 
-def verilog_gf_poly2power(gf, name = None):
-    name = "gf_poly2power_%d" % gf.degree
+def verilog_gf_poly2power(gf):
+    name = "gf%d_poly2power" % gf.order
 
     str = f'''
 // Convert Galois field number from poly representation (provided as an integer)
@@ -36,7 +37,7 @@ endmodule
     return str
 
 def verilog_gf_power2poly(gf, name = None):
-    name = "gf_power2poly_%d" % gf.degree
+    name = "gf%d_power2poly" % gf.order
 
     str = f'''
 // Convert Galois field number from power representation 
@@ -67,8 +68,8 @@ endmodule
 
     return str
 
-def verilog_poly_mult(gf):
-    name = "gf_poly_mult_%d" % gf.degree
+def verilog_gf_poly_mult(gf):
+    name = "gf%d_poly_mult" % gf.order
 
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
@@ -104,8 +105,8 @@ module %s(
 
     return str
 
-def verilog_poly_mod(gf):
-    name = "gf_poly_mod_%d" % gf.degree
+def verilog_gf_poly_mod(gf):
+    name = "gf%d_poly_mod" % gf.order
 
     str = f'''
 // Modulo reduction by primitive polynomial of a polynomial that was the result of a 
@@ -121,7 +122,7 @@ module %s(
 
     return str
 
-def verilog_poly_mul_mastrovito(gf, opt = True):
+def verilog_gf_poly_mult_mastrovito(gf, opt = True):
     p_coefs = []
     p_coefs_sym = []
     for i in range(gf.degree+1):
@@ -171,7 +172,7 @@ def verilog_poly_mul_mastrovito(gf, opt = True):
     #print(M)
     #print(c_coefs)
 
-    name = "gf_poly_mul_mastrovito_%d" % gf.degree
+    name = "gf%d_poly_mult_mastrovito" % gf.order
 
     str = f'''
 // Mastrovito GF multiplier
@@ -217,8 +218,25 @@ if False:
     str = verilog_poly_mod(gf)
     print(str)
 
-if True:
+if False:
     gf = galois.GF(2**8)
     str = verilog_poly_mul_mastrovito(gf)
     print(str)
+
+if True:
+    gf = galois.GF(2**8)
+    s = ""
+    s += ''.join([f"// %s\n" % x for x in gf.properties.split('\n')])
+    s += verilog_gf_poly2power(gf)
+    s += "\n"
+    s += verilog_gf_power2poly(gf)
+    s += "\n"
+    s += verilog_gf_poly_mult(gf)
+    s += "\n"
+    s += verilog_gf_poly_mod(gf)
+    s += "\n"
+    s += verilog_gf_poly_mult_mastrovito(gf)
+    s += "\n"
+    s += "\n"
+    print(s)
 

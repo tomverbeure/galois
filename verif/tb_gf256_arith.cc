@@ -1,10 +1,10 @@
 
 #include <stdio.h>
 
-#include "galois.h"
+#include "gf256_arith.h"
 
 int main() {
-    cxxrtl_design::p_gf__poly__mul__mastrovito__8 top;
+    cxxrtl_design::p_gf256__poly__mult__mastrovito top;
     top.step();
 
     for(unsigned int a=0;a<256;++a){
