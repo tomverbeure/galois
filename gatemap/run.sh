@@ -1,1 +1,1 @@
-yosys -s synth.ys -l traditional_ab_mod_p_8.log 
+yosys -s synth.ys -l synth.log 
