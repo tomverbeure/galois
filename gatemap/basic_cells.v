@@ -39,4 +39,15 @@ module XOR2(
     endspecify
 endmodule
 
+module DFF(
+    input D,
+    input CK,
+    output Q);
+
+    specify 
+        (posedge CK *> (Q : D)) = 1;
+        $setup(D, posedge CK, 0);
+    endspecify
+endmodule
+
 

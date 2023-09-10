@@ -2,6 +2,7 @@
 
 read_verilog ../verilog/traditional_ab_mod_p_8.v
 hierarchy -auto-top
+flatten
 proc
 techmap
 clean
@@ -20,6 +21,7 @@ sta
 delete
 read_verilog ../verilog/traditional_ab_mod_p_8.v
 hierarchy -auto-top
+flatten
 synth_ecp5 -nobram
 stat
 tee -o traditional_ab_mod_p_256_ecp5.json stat -json 
@@ -27,6 +29,7 @@ tee -o traditional_ab_mod_p_256_ecp5.json stat -json
 delete
 read_verilog ../verilog/traditional_ab_mod_p_8.v
 hierarchy -auto-top
+flatten
 synth_ice40 -nobram
 stat
 tee -o traditional_ab_mod_p_256_ice40.json stat -json 
@@ -37,6 +40,7 @@ delete
 
 read_verilog ../build/gf256_arith.v
 hierarchy -top gf256_poly_mult_mastrovito
+flatten
 proc
 techmap
 clean
@@ -55,6 +59,7 @@ sta
 delete
 read_verilog ../build/gf256_arith.v
 hierarchy -auto-top
+flatten
 synth_ecp5 -nobram
 stat -json
 tee -o gf256_poly_mult_mastrovito_ecp5.json stat -json
@@ -62,9 +67,24 @@ tee -o gf256_poly_mult_mastrovito_ecp5.json stat -json
 delete
 read_verilog ../build/gf256_arith.v
 hierarchy -auto-top
+flatten
 synth_ice40 -nobram
 stat -json
 tee -o gf256_poly_mult_mastrovito_ice40.json stat -json
 
+#============================================================
 
+delete
+read_verilog mul_wrapper.v ../build/gf256_arith.v
+hierarchy -top gf256_poly_mult_mastrovito_wrapper
+flatten
+proc
+techmap
+clean
 
+dfflibmap -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib
+clean
+
+read_verilog -specify basic_cells.v
+sta
