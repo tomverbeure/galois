@@ -1,6 +1,2 @@
-galois.v
-galois.h
-tb.gate.v
-tb_galois
 *.log
 build/
