@@ -15,7 +15,7 @@ class SymSymbol(SymNode):
         self.s      = s
     
     def flatten(self):
-        s = f"({self.s})"
+        s = f"{self.s}"
         return s
 
 class SymLeafValue(SymNode):
@@ -23,7 +23,7 @@ class SymLeafValue(SymNode):
         self.val    = val
 
     def flatten(self):
-        s = f"({self.val})"
+        s = f"{self.val}"
         return s
 
 
