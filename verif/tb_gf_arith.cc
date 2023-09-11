@@ -2,16 +2,16 @@
 #include <stdio.h>
 
 #ifdef MASTROVITO
-#include "gf256_poly_mult_mastrovito.h"
+#include "gf_poly_mult_mastrovito.h"
 #else
-#include "gf256_poly_mult.h"
+#include "gf_poly_mult.h"
 #endif
 
 int main() {
 #ifdef MASTROVITO
-    cxxrtl_design::p_gf256__poly__mult__mastrovito top;
+    cxxrtl_design::p_gf__poly__mult__mastrovito top;
 #else
-    cxxrtl_design::p_gf256__poly__mult top;
+    cxxrtl_design::p_gf__poly__mult top;
 #endif
     top.step();
 

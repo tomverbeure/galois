@@ -4,20 +4,21 @@ import sys
 import galois
 from sym import *
 
-def verilog_gf_poly2power(gf):
-    name = "gf%d_poly2power" % gf.order
+def verilog_gf_poly2power(gf, name = None):
+    if name is None:
+        name = "gf%d_poly2power" % gf.order
 
     str = f'''
 // Convert Galois field number from poly representation (provided as an integer)
 // to power/exponent representation
-module %s(
+module {name}(
     input      [%d:0] poly,
     output reg [%d:0] power
     );
 
     always @(*) begin
         case(poly)
-''' % (name, gf.degree-1, gf.degree-1)
+''' % (gf.degree-1, gf.degree-1)
 
     for poly in range(0,gf.order):
         if poly == 0:
@@ -37,19 +38,20 @@ endmodule
     return str
 
 def verilog_gf_power2poly(gf, name = None):
-    name = "gf%d_power2poly" % gf.order
+    if name is None:
+        name = "gf%d_power2poly" % gf.order
 
     str = f'''
 // Convert Galois field number from power representation 
 // to poly representation
-module %s(
+module {name}(
     input      [%d:0] power,
     output reg [%d:0] poly
     );
 
     always @(*) begin
         case(power)
-''' % (name, gf.degree-1, gf.degree-1)
+''' % (gf.degree-1, gf.degree-1)
 
     x = gf(1)
     for power in range(0,gf.order):
@@ -68,11 +70,12 @@ endmodule
 
     return str
 
-def verilog_gf_poly_ab(gf):
+def verilog_gf_poly_ab(gf, name = None):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
-    name = "gf%d_poly_ab" % gf.order
+    if name is None:
+        name = "gf%d_poly_ab" % gf.order
 
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
@@ -80,13 +83,13 @@ def verilog_gf_poly_ab(gf):
 //
 // XORs: {SymSum.nr_sums}
 // ANDs: {SymFactor.nr_facts}
-module %s(
+module {name}(
     input      [%d:0] poly_a,
     input      [%d:0] poly_b,
     output     [%d:0] poly_out
     );
 
-''' % (name, gf.degree-1, gf.degree-1, 2*gf.degree-2)
+''' % (gf.degree-1, gf.degree-1, 2*gf.degree-2)
 
     output_factors = [ None ] * (2*gf.degree-1)
 
@@ -111,11 +114,12 @@ module %s(
 
     return str
 
-def verilog_gf_poly_mod(gf):
+def verilog_gf_poly_mod(gf, name = None):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
-    name = "gf%d_poly_mod" % gf.order
+    if name is None:
+        name = "gf%d_poly_mod" % gf.order
 
     p_coefs = [ 0 ] * (gf.degree+1)
     for i in range(gf.degree+1):
@@ -183,14 +187,14 @@ def verilog_gf_poly_mod(gf):
 //
 // XORs: {SymSum.nr_sums}
 // ANDs: {SymFactor.nr_facts}
-module %s(
+module {name}(
     input      [%d:0] poly_in,
     output     [%d:0] poly_out
     );
 
     wire [{2*gf.degree-2:0}:0] d = poly_in;
 
-''' % (name, 2*gf.degree-2, gf.degree-1)
+''' % (2*gf.degree-2, gf.degree-1)
 
     for r in r_coefs:
         s += f'    wire {r[0]} = {r[1].flatten()};\n'
@@ -203,8 +207,10 @@ module %s(
 
     return s
 
-def verilog_gf_poly_mult(gf):
-    name = "gf%d_poly_mult" % gf.order
+def verilog_gf_poly_mult(gf, name = None):
+    if name is None:
+        name = "gf%d_poly_mult" % gf.order
+
     s = f'''
 // Traditional GF multiplier
 module {name}(
@@ -215,13 +221,13 @@ module {name}(
 
     wire [{2*gf.degree-2}:0] poly_ab;
 
-    gf{gf.order}_poly_ab u_gf_poly_ab(
+    gf_poly_ab u_gf_poly_ab(
         poly_a, 
         poly_b,
         poly_ab
     );
 
-    gf{gf.order}_poly_mod u_gf_poly_mod(
+    gf_poly_mod u_gf_poly_mod(
         poly_ab,
         poly_out
     );
@@ -231,9 +237,12 @@ endmodule
     return s
 
 
-def verilog_gf_poly_mult_mastrovito(gf, opt = True):
+def verilog_gf_poly_mult_mastrovito(gf, name = None, opt = True):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
+
+    if name is None:
+        name = "gf%d_poly_mult_mastrovito" % gf.order
 
     p_coefs = []
     p_coefs_sym = []
@@ -284,14 +293,13 @@ def verilog_gf_poly_mult_mastrovito(gf, opt = True):
     #print(M)
     #print(c_coefs)
 
-    name = "gf%d_poly_mult_mastrovito" % gf.order
 
     s = f'''
 // Mastrovito GF multiplier
 //
 // XORs: {SymSum.nr_sums}
 // ANDs: {SymFactor.nr_facts}
-module %s(
+module {name}(
     input      [%d:0] poly_a,
     input      [%d:0] poly_b,
     output     [%d:0] poly_out
@@ -300,7 +308,7 @@ module %s(
     wire [%d:0] a = poly_a;
     wire [%d:0] b = poly_b;
 
-''' % (name, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1)
+''' % (gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1)
 
     for m_coef in m_coefs:
         s += f'    wire %s = %s;\n' % (m_coef[0], m_coef[1].flatten()) 
@@ -339,20 +347,22 @@ if False:
     print(s)
 
 if True:
-    gf = galois.GF(2**8)
+    prefix = "gf_"
+
+    gf = galois.GF(2**4)
     s = ""
     s += ''.join([f"// %s\n" % x for x in gf.properties.split('\n')])
-    s += verilog_gf_poly2power(gf)
+    s += verilog_gf_poly2power(gf, name=prefix+"poly2power")
     s += "\n"
-    s += verilog_gf_power2poly(gf)
+    s += verilog_gf_power2poly(gf, name=prefix+"power2poly")
     s += "\n"
-    s += verilog_gf_poly_ab(gf)
+    s += verilog_gf_poly_ab(gf, name=prefix+"poly_ab")
     s += "\n"
-    s += verilog_gf_poly_mod(gf)
+    s += verilog_gf_poly_mod(gf, name=prefix+"poly_mod")
     s += "\n"
-    s += verilog_gf_poly_mult(gf)
+    s += verilog_gf_poly_mult(gf, name=prefix+"poly_mult")
     s += "\n"
-    s += verilog_gf_poly_mult_mastrovito(gf)
+    s += verilog_gf_poly_mult_mastrovito(gf, name=prefix+"poly_mult_mastrovito")
     s += "\n"
     s += "\n"
     print(s)
