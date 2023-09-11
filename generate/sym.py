@@ -38,18 +38,26 @@ class SymOne(SymLeafValue):
         pass
 
 class SymFactor(SymNode):
+    nr_facts = 0
+
     def __init__(self, a, b):
         self.node_a  = a
         self.node_b  = b
+
+        SymFactor.nr_facts += 1
 
     def flatten(self):
         s = f"({self.node_a.flatten()} & {self.node_b.flatten()})"
         return s
 
 class SymSum(SymNode):
+    nr_sums = 0
+
     def __init__(self, a,b):
         self.node_a  = a
         self.node_b  = b
+
+        SymSum.nr_sums += 1
 
     def flatten(self):
         s = f"({self.node_a.flatten()} ^ {self.node_b.flatten()})"

@@ -69,11 +69,17 @@ endmodule
     return str
 
 def verilog_gf_poly_mult(gf):
+    SymSum.nr_sums  = 0
+    SymFactor.nr_facts = 0
+
     name = "gf%d_poly_mult" % gf.order
 
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
 // Modulo reduction is not included
+//
+// XORs: {SymSum.nr_sums}
+// ANDs: {SymFactor.nr_facts}
 module %s(
     input      [%d:0] poly_a,
     input      [%d:0] poly_b,
@@ -106,23 +112,101 @@ module %s(
     return str
 
 def verilog_gf_poly_mod(gf):
+    SymSum.nr_sums  = 0
+    SymFactor.nr_facts = 0
+
     name = "gf%d_poly_mod" % gf.order
 
-    str = f'''
+    p_coefs = [ 0 ] * (gf.degree+1)
+    for i in range(gf.degree+1):
+        p_coefs[i] = (int(gf.irreducible_poly)>>i)&1
+
+    # Input for a[3:0] * b[3:0] -> d[6:0]
+    # Primitive poly: p[4:0]
+    # 
+    #   d6       d5      d4      d3      d2      d1      d0
+    #   p4       p3      p2      p1      p0
+    #
+    # + d6p4     d6p3    d6p2    d6p1    d6p0  
+    # ----------------------------------------
+    #   d6       d5+d6p3 d4+d6p3 d3+d6p1 d2+d6p0 
+    #            p4      p3      p2      p1      p0
+    #
+    #                    p4      p3      p2      p1      p0
+    # ...
+   
+    R = [ SymSymbol(f"d[{i}]") for i in range (2*gf.degree-1) ] 
+
+    #Trui Result for each step of the division
+    R = [ [ SymZero() for _ in range (2*gf.degree-1) ] for _ in range(gf.degree) ]
+
+    for d in range(2*gf.degree-1):
+        R[0][d] = SymSymbol(f"d[{d}]")
+
+    r_coefs = [ ]
+
+    #for d_idx in reversed(range(gf.degree-1)):
+    for step in range(1, gf.degree):
+        d_idx = gf.degree-1-step
+        d_msb = d_idx+gf.degree
+
+        for d in range(2*gf.degree-1):
+            R[step][d] = R[step-1][d]
+
+        for p_idx in range(1, gf.degree+1):
+            if True:
+                if p_coefs[gf.degree-p_idx] == 1:
+                    R[step][d_msb-p_idx] = SymSum(R[step-1][d_msb-p_idx], R[step-1][d_msb])
+            else:
+                R[step][d_msb-p_idx] = SymSum(
+                                    R[step-1][d_msb-p_idx], 
+                                    SymFactor(R[step-1][d_msb], SymSymbol(f"p[{gf.degree-p_idx}]"))
+                                )
+
+            if True:
+                r_coef_str = f"r_{step}_{d_msb-p_idx}"
+                r_coef = SymSymbol(r_coef_str)
+                r_coefs.append([r_coef_str, R[step][d_msb-p_idx] ])
+                R[step][d_msb-p_idx] = r_coef
+
+    #for r in r_coefs:
+    #    print(r[0], "=", r[1].flatten())
+
+    #for (step, r) in enumerate(R):
+    #    print(f"Step {step}:")
+    #    for r_term in reversed(r):
+    #        print(r_term.flatten())
+
+    s = f'''
 // Modulo reduction by primitive polynomial of a polynomial that was the result of a 
 // poly_mult of 2 GF numbers
+//
+// XORs: {SymSum.nr_sums}
+// ANDs: {SymFactor.nr_facts}
 module %s(
     input      [%d:0] poly_in,
     output     [%d:0] poly_out
     );
 
+    wire [{2*gf.degree-2:0}:0] d = poly_in;
+
 ''' % (name, 2*gf.degree-2, gf.degree-1)
 
-    str += f'endmodule'
+    for r in r_coefs:
+        s += f'    wire {r[0]} = {r[1].flatten()};\n'
 
-    return str
+    s += "\n"
+    s += f'    assign poly_out = {{%s}};\n' % (',').join([r.flatten() for r in reversed(R[gf.degree-1][0:gf.degree])])
+
+    s += f'endmodule'
+
+
+    return s
 
 def verilog_gf_poly_mult_mastrovito(gf, opt = True):
+    SymSum.nr_sums  = 0
+    SymFactor.nr_facts = 0
+
     p_coefs = []
     p_coefs_sym = []
     for i in range(gf.degree+1):
@@ -174,8 +258,11 @@ def verilog_gf_poly_mult_mastrovito(gf, opt = True):
 
     name = "gf%d_poly_mult_mastrovito" % gf.order
 
-    str = f'''
+    s = f'''
 // Mastrovito GF multiplier
+//
+// XORs: {SymSum.nr_sums}
+// ANDs: {SymFactor.nr_facts}
 module %s(
     input      [%d:0] poly_a,
     input      [%d:0] poly_b,
@@ -188,40 +275,40 @@ module %s(
 ''' % (name, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1)
 
     for m_coef in m_coefs:
-        str += f'    wire %s = %s;\n' % (m_coef[0], m_coef[1].flatten()) 
+        s += f'    wire %s = %s;\n' % (m_coef[0], m_coef[1].flatten()) 
 
-    str += '\n'
+    s += '\n'
 
     for (c_idx, c_coef) in enumerate(c_coefs):
-        str += f'    assign poly_out[%d] = %s;\n' % (c_idx, c_coef.flatten())
+        s += f'    assign poly_out[%d] = %s;\n' % (c_idx, c_coef.flatten())
 
-    str += f'endmodule'
+    s += f'endmodule'
 
-    return str
+    return s
     
 
 if False:
     gf = galois.GF(2**8)
-    str = verilog_gf_poly2power(gf)
-    print(str)
+    s = verilog_gf_poly2power(gf)
+    print(s)
     print()
-    str = verilog_gf_power2poly(gf)
-    print(str)
+    s = verilog_gf_power2poly(gf)
+    print(s)
 
 if False:
     gf = galois.GF(2**8)
-    str = verilog_poly_mult(gf)
-    print(str)
-
-if False:
-    gf = galois.GF(2**4)
-    str = verilog_poly_mod(gf)
-    print(str)
+    s = verilog_poly_mult(gf)
+    print(s)
 
 if False:
     gf = galois.GF(2**8)
-    str = verilog_poly_mul_mastrovito(gf)
-    print(str)
+    s = verilog_gf_poly_mod(gf)
+    print(s)
+
+if False:
+    gf = galois.GF(2**8)
+    s = verilog_poly_mul_mastrovito(gf)
+    print(s)
 
 if True:
     gf = galois.GF(2**8)
