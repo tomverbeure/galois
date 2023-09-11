@@ -68,11 +68,11 @@ endmodule
 
     return str
 
-def verilog_gf_poly_mult(gf):
+def verilog_gf_poly_ab(gf):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
-    name = "gf%d_poly_mult" % gf.order
+    name = "gf%d_poly_ab" % gf.order
 
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
@@ -203,6 +203,34 @@ module %s(
 
     return s
 
+def verilog_gf_poly_mult(gf):
+    name = "gf%d_poly_mult" % gf.order
+    s = f'''
+// Traditional GF multiplier
+module {name}(
+    input      [{gf.degree-1}:0] poly_a,
+    input      [{gf.degree-1}:0] poly_b,
+    output     [{gf.degree-1}:0] poly_out
+    );
+
+    wire [{2*gf.degree-2}:0] poly_ab;
+
+    gf{gf.order}_poly_ab u_gf_poly_ab(
+        poly_a, 
+        poly_b,
+        poly_ab
+    );
+
+    gf{gf.order}_poly_mod u_gf_poly_mod(
+        poly_ab,
+        poly_out
+    );
+
+endmodule
+'''
+    return s
+
+
 def verilog_gf_poly_mult_mastrovito(gf, opt = True):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
@@ -318,9 +346,11 @@ if True:
     s += "\n"
     s += verilog_gf_power2poly(gf)
     s += "\n"
-    s += verilog_gf_poly_mult(gf)
+    s += verilog_gf_poly_ab(gf)
     s += "\n"
     s += verilog_gf_poly_mod(gf)
+    s += "\n"
+    s += verilog_gf_poly_mult(gf)
     s += "\n"
     s += verilog_gf_poly_mult_mastrovito(gf)
     s += "\n"
