@@ -158,7 +158,7 @@ def verilog_gf_poly_mod(gf, name = None):
             R[step][d] = R[step-1][d]
 
         for p_idx in range(1, gf.degree+1):
-            if True:
+            if False:
                 if p_coefs[gf.degree-p_idx] == 1:
                     R[step][d_msb-p_idx] = SymSum(R[step-1][d_msb-p_idx], R[step-1][d_msb])
             else:
@@ -188,13 +188,14 @@ def verilog_gf_poly_mod(gf, name = None):
 // XORs: {SymSum.nr_sums}
 // ANDs: {SymFactor.nr_facts}
 module {name}(
-    input      [%d:0] poly_in,
-    output     [%d:0] poly_out
+    input      [{2*gf.degree-2}:0] poly_in,
+    output     [{gf.degree-1}:0] poly_out
     );
 
     wire [{2*gf.degree-2:0}:0] d = poly_in;
+    wire [{gf.degree}:0] p = 'h%x;
 
-''' % (2*gf.degree-2, gf.degree-1)
+''' % (int(gf.irreducible_poly))
 
     for r in r_coefs:
         s += f'    wire {r[0]} = {r[1].flatten()};\n'
@@ -336,8 +337,8 @@ if False:
     s = verilog_poly_mult(gf)
     print(s)
 
-if False:
-    gf = galois.GF(2**8)
+if True:
+    gf = galois.GF(2**4)
     s = verilog_gf_poly_mod(gf)
     print(s)
 
@@ -349,7 +350,7 @@ if False:
 if True:
     prefix = "gf_"
 
-    gf = galois.GF(2**4)
+    gf = galois.GF(2**8)
     s = ""
     s += ''.join([f"// %s\n" % x for x in gf.properties.split('\n')])
     s += verilog_gf_poly2power(gf, name=prefix+"poly2power")

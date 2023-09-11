@@ -2,10 +2,14 @@
 // Copied from https://github.com/winsonbook/Reed-Solomon-/blob/master/multiply.v
 
 module traditional_ab_mod_p_8(
-    input [7:0] A,
-    input [7:0] B,
-    output[7:0] X
+    input [7:0] poly_a,
+    input [7:0] poly_b,
+    output[7:0] poly_out
     );
+
+    wire [7:0] A = poly_a;
+    wire [7:0] B = poly_b;
+
 wire [14:0] z;
 assign z[0] = (A[0]&B[0]);
 assign z[1] = (A[1]&B[0])^(A[0]&B[1]);
@@ -53,5 +57,5 @@ wire [8:0] D7 = {MUX6[7],MUX6[6],MUX6[5],MUX6[4],MUX6[3],MUX6[2],MUX6[1],MUX6[0]
 wire [8:0] and7 = {D7[8]&poly[8],D7[8]&poly[7],D7[8]&poly[6],D7[8]&poly[5],D7[8]&poly[4],D7[8]&poly[3],D7[8]&poly[2],D7[8]&poly[1],D7[8]&poly[0]};
 wire [8:0] MUX7 = D7^and7;
 
-assign X = MUX7[7:0];
+assign poly_out = MUX7[7:0];
 endmodule

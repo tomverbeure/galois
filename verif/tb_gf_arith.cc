@@ -4,14 +4,22 @@
 #ifdef MASTROVITO
 #include "gf_poly_mult_mastrovito.h"
 #else
+#ifdef REF
+#include "gf_poly_mult_ref.h"
+#else
 #include "gf_poly_mult.h"
+#endif
 #endif
 
 int main() {
 #ifdef MASTROVITO
     cxxrtl_design::p_gf__poly__mult__mastrovito top;
 #else
+#ifdef REF
+    cxxrtl_design::p_traditional__ab__mod__p__8 top;
+#else
     cxxrtl_design::p_gf__poly__mult top;
+#endif
 #endif
     top.step();
 
