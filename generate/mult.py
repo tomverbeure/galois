@@ -1,12 +1,17 @@
 #! /usr/bin/env python3
 
 import sys
+import argparse
+
 import galois
 from sym import *
 
-def verilog_gf_poly2power(gf, name = None):
+def verilog_gf_poly2power(gf, prefix = None, name = None):
+    if prefix is None:
+        prefix = f"gf%d" % gf.degree
+
     if name is None:
-        name = "gf%d_poly2power" % gf.order
+        name = f"{prefix}_poly2power"
 
     str = f'''
 // Convert Galois field number from poly representation (provided as an integer)
@@ -37,9 +42,12 @@ endmodule
 
     return str
 
-def verilog_gf_power2poly(gf, name = None):
+def verilog_gf_power2poly(gf, prefix = None, name = None):
+    if prefix is None:
+        prefix = f"gf%d" % gf.degree
+
     if name is None:
-        name = "gf%d_power2poly" % gf.order
+        name = f"{prefix}_power2poly"
 
     str = f'''
 // Convert Galois field number from power representation 
@@ -70,12 +78,15 @@ endmodule
 
     return str
 
-def verilog_gf_poly_ab(gf, name = None):
+def verilog_gf_poly_ab(gf, prefix = None, name = None):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
+    if prefix is None:
+        prefix = f"gf%d" % gf.degree
+
     if name is None:
-        name = "gf%d_poly_ab" % gf.order
+        name = f"{prefix}_poly_ab"
 
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
@@ -114,12 +125,15 @@ module {name}(
 
     return str
 
-def verilog_gf_poly_mod(gf, name = None, opt = True):
+def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
+    if prefix is None:
+        prefix = f"gf%d" % gf.degree
+
     if name is None:
-        name = "gf%d_poly_mod" % gf.order
+        name = f"{prefix}_poly_mod"
 
     p_coefs = [ 0 ] * (gf.degree+1)
     for i in range(gf.degree+1):
@@ -208,9 +222,12 @@ module {name}(
 
     return s
 
-def verilog_gf_poly_mult(gf, name = None):
+def verilog_gf_poly_mult(gf, prefix = None, name = None):
+    if prefix is None:
+        prefix = f"gf%d" % gf.degree
+
     if name is None:
-        name = "gf%d_poly_mult" % gf.order
+        name = f"{prefix}_poly_mult"
 
     s = f'''
 // Traditional GF multiplier
@@ -222,13 +239,13 @@ module {name}(
 
     wire [{2*gf.degree-2}:0] poly_ab;
 
-    gf_poly_ab u_gf_poly_ab(
+    {prefix}_poly_ab u_gf_poly_ab(
         poly_a, 
         poly_b,
         poly_ab
     );
 
-    gf_poly_mod u_gf_poly_mod(
+    {prefix}_poly_mod u_gf_poly_mod(
         poly_ab,
         poly_out
     );
@@ -238,12 +255,15 @@ endmodule
     return s
 
 
-def verilog_gf_poly_mult_mastrovito(gf, name = None, opt = True):
+def verilog_gf_poly_mult_mastrovito(gf, prefix = None, name = None, opt = True):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
+    if prefix is None:
+        prefix = f"gf%d" % gf.degree
+
     if name is None:
-        name = "gf%d_poly_mult_mastrovito" % gf.order
+        name = f"{prefix}_poly_mult_mastrovito"
 
     p_coefs = []
     p_coefs_sym = []
@@ -277,7 +297,7 @@ def verilog_gf_poly_mult_mastrovito(gf, name = None, opt = True):
                 else:
                     M[i][j] = SymSum(M[i-1][j-1], M[i-1][gf.degree-1])
             else:
-                M[i][j] = SymSum(M[i-1][j-1], SymFactor(M[i-1][gf.degree-1], p_coefs_sym[j]))
+                M[i][j] = SymSum(M[i-1][j-1], SymFactor(M[i-1][gf.degree-1], SymSymbol(f"p[{j}]")))
 
             m_coef_str = f"m_%d_%d" % (i,j)
             m_coef = SymSymbol(m_coef_str)
@@ -301,15 +321,16 @@ def verilog_gf_poly_mult_mastrovito(gf, name = None, opt = True):
 // XORs: {SymSum.nr_sums}
 // ANDs: {SymFactor.nr_facts}
 module {name}(
-    input      [%d:0] poly_a,
-    input      [%d:0] poly_b,
-    output     [%d:0] poly_out
+    input      [{gf.degree-1}:0] poly_a,
+    input      [{gf.degree-1}:0] poly_b,
+    output     [{gf.degree-1}:0] poly_out
     );
 
-    wire [%d:0] a = poly_a;
-    wire [%d:0] b = poly_b;
+    wire [{gf.degree-1}:0] a = poly_a;
+    wire [{gf.degree-1}:0] b = poly_b;
+    wire [{gf.degree}:0] p = 'h%x;
 
-''' % (gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1, gf.degree-1)
+''' % (int(gf.irreducible_poly))
 
     for m_coef in m_coefs:
         s += f'    wire %s = %s;\n' % (m_coef[0], m_coef[1].flatten()) 
@@ -337,7 +358,7 @@ if False:
     s = verilog_poly_mult(gf)
     print(s)
 
-if True:
+if False:
     gf = galois.GF(2**4)
     s = verilog_gf_poly_mod(gf)
     print(s)
@@ -348,23 +369,62 @@ if False:
     print(s)
 
 if True:
-    prefix = "gf_"
+    parser = argparse.ArgumentParser(description="Generate verilog Galois field arithmetic logic")
+    parser.add_argument('-o', '--output', help='name of output verilog file. When not given, output is sent to stdout.')
+    parser.add_argument('-p', '--prefix', help='prefix string of generate verilog modules. Default is gf<order>.')
+    parser.add_argument('-n', '--degree', default=8, help='Degree of the GF(2^n) field. Default is 8.')
+    parser.add_argument('-a', '--all', action='store_true', help='Output all known Verilog modules.')
+    parser.add_argument('-d', '--mul_trad', action='store_true', help='Output traditional multiplier.')
+    parser.add_argument('-m', '--mul_mast', action='store_true', help='Output Mastrovito multiplier.')
+    parser.add_argument('--poly2power', action='store_true', help='Output poly2power.')
+    parser.add_argument('--power2poly', action='store_true', help='Output power2poly.')
+    parser.add_argument('--no_opt', action='store_true', help='Don''t optimize away constant primitive terms')
 
-    gf = galois.GF(2**8)
+    args = parser.parse_args()
+
+    degree = args.degree
+    opt = not(args.no_opt)
+
+    if args.prefix is None:
+        prefix = f"gf{degree}"
+    else:
+        prefix = args.prefix
+
+    if args.output is None:
+        output = sys.stdout
+    else:
+        output = open(args.output, 'wt')
+
+
+    gf = galois.GF(2**int(args.degree))
+
     s = ""
     s += ''.join([f"// %s\n" % x for x in gf.properties.split('\n')])
-    s += verilog_gf_poly2power(gf, name=prefix+"poly2power")
-    s += "\n"
-    s += verilog_gf_power2poly(gf, name=prefix+"power2poly")
-    s += "\n"
-    s += verilog_gf_poly_ab(gf, name=prefix+"poly_ab")
-    s += "\n"
-    s += verilog_gf_poly_mod(gf, name=prefix+"poly_mod")
-    s += "\n"
-    s += verilog_gf_poly_mult(gf, name=prefix+"poly_mult")
-    s += "\n"
-    s += verilog_gf_poly_mult_mastrovito(gf, name=prefix+"poly_mult_mastrovito")
-    s += "\n"
-    s += "\n"
-    print(s)
+
+    if args.all or args.poly2power:
+        s += verilog_gf_poly2power(gf, prefix=prefix)
+        s += "\n"
+
+    if args.all or args.power2poly:
+        s += verilog_gf_power2poly(gf, prefix=prefix)
+        s += "\n"
+
+    if args.all or args.mul_trad:
+        s += verilog_gf_poly_ab(gf, prefix=prefix)
+        s += "\n"
+        s += verilog_gf_poly_mod(gf, prefix=prefix, opt=opt)
+        s += "\n"
+        s += verilog_gf_poly_mult(gf, prefix=prefix)
+        s += "\n"
+
+    if args.all or args.mul_mast:
+        s += verilog_gf_poly_mult_mastrovito(gf, prefix=prefix, opt=opt)
+        s += "\n"
+
+        s += "\n"
+    print(s, file=output)
+
+    if output is not sys.stdout:
+        output.close()
+
 

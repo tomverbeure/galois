@@ -29,7 +29,7 @@ synth: galois.v
 
 
 ./build/gf_arith.v: ./generate/mult.py
-	./generate/mult.py > $@
+	./generate/mult.py -n 8 --output $@ --prefix gf --all
 
 clean:
 	\rm -f build/*
