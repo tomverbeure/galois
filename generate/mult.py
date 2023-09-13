@@ -114,7 +114,7 @@ module {name}(
 
     return str
 
-def verilog_gf_poly_mod(gf, name = None):
+def verilog_gf_poly_mod(gf, name = None, opt = True):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
 
@@ -158,7 +158,7 @@ def verilog_gf_poly_mod(gf, name = None):
             R[step][d] = R[step-1][d]
 
         for p_idx in range(1, gf.degree+1):
-            if False:
+            if opt:
                 if p_coefs[gf.degree-p_idx] == 1:
                     R[step][d_msb-p_idx] = SymSum(R[step-1][d_msb-p_idx], R[step-1][d_msb])
             else:
