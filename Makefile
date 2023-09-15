@@ -10,13 +10,13 @@ synth: galois.v
 	yosys -s synth.ys
 
 ./build/tb_gf_arith_mastrovito: ./verif/tb_gf_arith.cc ./build/gf_poly_mult_mastrovito.h 
-	clang++ -DMASTROVITO -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
+	g++ -DMASTROVITO -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
 
 ./build/tb_gf_arith: ./verif/tb_gf_arith.cc ./build/gf_poly_mult.h
-	clang++ -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
+	g++ -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
 
 ./build/tb_gf_arith_ref: ./verif/tb_gf_arith.cc ./build/gf_poly_mult_ref.h
-	clang++ -DREF -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
+	g++ -DREF -std=c++11 -I`yosys-config --datdir`/include -I./build $< -o $@
 
 ./build/gf_poly_mult_mastrovito.h: ./build/gf_arith.v
 	yosys -p "read_verilog $<; hierarchy -top gf_poly_mult_mastrovito; flatten; write_cxxrtl $@"
