@@ -1,8 +1,8 @@
-#NR_BITS 	= 8
-#GF		= 256
+NR_BITS 	= 8
+GF		= 256
 
-NR_BITS 	= 4
-GF		= 16
+#NR_BITS 	= 4
+#GF		= 16
 
 
 all: ./build/tb_gf_arith_mastrovito ./build/tb_gf_arith #./build/tb_gf_arith_ref

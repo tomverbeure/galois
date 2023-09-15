@@ -63,7 +63,7 @@ def mastrovito_mul(a_coefs_in, b_coefs_in, p_coefs_in):   # Coefs are MSB first
 
     M[0] = [ a_coefs[0], a_coefs[1], a_coefs[2], a_coefs[3] ]
 
-    for i in range(1, 4):       # Go throug all rows
+    for i in range(1, 4):       # Go through all rows
         M[i] = [
             M[i-1][3],
             M[i-1][0] + (M[i-1][3] * p_coefs[1]),

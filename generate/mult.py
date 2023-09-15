@@ -287,15 +287,15 @@ def verilog_gf_poly_mult_mastrovito(gf, prefix = None, name = None, opt = True):
     for j in range(gf.degree):
         M[0][j] = SymSymbol(f"a[%d]" % j)
 
-    for i in range(1, gf.degree):       # Go throug all rows
+    for i in range(1, gf.degree):       # Go through all rows
         M[i][0] = M[i-1][gf.degree-1]
 
-        for j in range(1, gf.degree):       # Go throug all columns
+        for j in range(1, gf.degree):       # Go through all columns
             if opt:
                 if p_coefs[j] == 1:
-                    M[i][j] = M[i-1][j-1]
-                else:
                     M[i][j] = SymSum(M[i-1][j-1], M[i-1][gf.degree-1])
+                else:
+                    M[i][j] = M[i-1][j-1]
             else:
                 M[i][j] = SymSum(M[i-1][j-1], SymFactor(M[i-1][gf.degree-1], SymSymbol(f"p[{j}]")))
 
