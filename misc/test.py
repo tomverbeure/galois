@@ -83,7 +83,7 @@ def mastrovito_mul(a_coefs_in, b_coefs_in, p_coefs_in):   # Coefs are MSB first
 
 if True:
     GF2 = galois.GF(2)
-    GF16 = galois.GF(2**8)
+    GF16 = galois.GF(2**4)
 
     GF2.repr("int")
     GF16.repr("int")
@@ -110,8 +110,8 @@ if True:
             b = galois.Poly(b_coefs, GF2)
         
             c = (a*b) % p
+
             c_coefs = [(int(c)>>3)&1, (int(c)>>2)&1, (int(c)>>1)&1, (int(c)>>0)&1]
-        
             c_coefs_m = mastrovito_mul(a_coefs, b_coefs, p_coefs)
         
             c_coefs = GF2(c_coefs)
@@ -120,14 +120,16 @@ if True:
             #print(c_coefs)
             #print(c_coefs_m)
 
-            #if numpy.array_equal(c_coefs, c_coefs_m):
-            #    print("OK!")
-            #else:
-            #    print(c_coefs)
-            #    print(c_coefs_m)
-            #    print("MISMATCH!")
+            if numpy.array_equal(c_coefs, c_coefs_m):
+                #print("OK!")
+                pass
+            else:
+                #print(c_coefs)
+                #print(c_coefs_m)
+                print("MISMATCH!")
+                pass
 
-            print(f"%02x,%02x,%02x"%(int(a),int(b),
+            print(f"%02x,%02x,%02x"%(int(a),int(b),c))
 
 if False:
     sym_test()

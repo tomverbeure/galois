@@ -12,19 +12,11 @@
 #endif
 
 int main() {
-#ifdef MASTROVITO
-    cxxrtl_design::p_gf__poly__mult__mastrovito top;
-#else
-#ifdef REF
-    cxxrtl_design::p_traditional__ab__mod__p__8 top;
-#else
-    cxxrtl_design::p_gf__poly__mult top;
-#endif
-#endif
+    cxxrtl_design:: DESIGN_TOP top;
     top.step();
 
-    for(unsigned int a=0;a<256;++a){
-        for(unsigned int b=0;b<256;++b){
+    for(unsigned int a=0;a<GF;++a){
+        for(unsigned int b=0;b<GF;++b){
             top.p_poly__a.set(a);
             top.p_poly__b.set(b);
             top.step();

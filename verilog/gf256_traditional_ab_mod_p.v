@@ -1,7 +1,7 @@
 
 // Copied from https://github.com/winsonbook/Reed-Solomon-/blob/master/multiply.v
 
-module traditional_ab_mod_p_8(
+module gf256_traditional_ab_mod_p(
     input [7:0] poly_a,
     input [7:0] poly_b,
     output[7:0] poly_out
