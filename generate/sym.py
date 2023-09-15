@@ -67,6 +67,8 @@ class SymSumVector(SymNode):
     def __init__(self, vec):
         self.vec  = vec
 
+        SymSum.nr_sums += len(vec)-1
+
     def flatten(self):
         s = ' ^ '.join(v.flatten() for v in self.vec)
         return s

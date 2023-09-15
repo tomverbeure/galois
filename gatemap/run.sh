@@ -1,1 +1,1 @@
-yosys -s synth.ys -l synth.log 
+yosys -s synth.ys -l ../build/synth.log 

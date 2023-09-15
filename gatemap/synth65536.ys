@@ -1,0 +1,97 @@
+
+#============================================================
+# Traditional multiplier
+#============================================================
+
+read_verilog ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult
+flatten
+proc
+techmap
+clean
+stat
+tee -o ../build/gf65536_poly_mult_gtech.json stat -json
+
+dfflibmap -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib
+clean
+stat -liberty ./basic_cells.lib
+tee -o ../build/gf65536_poly_mult_gates.json stat -json -liberty ./basic_cells.lib
+
+read_verilog -specify basic_cells.v
+tee -o ../build/gf65536_poly_mult_gates.ltp ltp
+
+delete
+read_verilog ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult
+flatten
+synth_ecp5 -nobram
+stat
+tee -o ../build/gf65536_poly_mult_ecp5.json stat -json 
+
+delete
+read_verilog ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult
+flatten
+synth_ice40 -nobram
+stat
+tee -o ../build/gf65536_poly_mult_ice40.json stat -json 
+
+delete
+
+#============================================================
+# Mastrovito multiplier
+#============================================================
+
+read_verilog ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult_mastrovito
+flatten
+proc
+techmap
+clean
+stat
+tee -o ../build/gf65536_poly_mult_mastrovito_gtech.json stat -json
+
+dfflibmap -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib
+clean
+stat -liberty ./basic_cells.lib
+tee -o ../build/gf65536_poly_mult_mastrovito_gates.json stat -json -liberty ./basic_cells.lib
+
+read_verilog -specify basic_cells.v
+tee -o ../build/gf65536_poly_mult_mastrovito_gates.ltp ltp
+
+delete
+read_verilog ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult_mastrovito
+flatten
+synth_ecp5 -nobram
+stat -json
+tee -o ../build/gf65536_poly_mult_mastrovito_ecp5.json stat -json
+
+delete
+read_verilog ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult_mastrovito
+flatten
+synth_ice40 -nobram
+stat -json
+tee -o ../build/gf65536_poly_mult_mastrovito_ice40.json stat -json
+
+#============================================================
+# Mastrovito multiplier with wrapper FFs 
+#============================================================
+
+delete
+read_verilog mul_wrapper.v ../build/gf65536_arith.v
+hierarchy -top gf65536_poly_mult_mastrovito_wrapper
+flatten
+proc
+techmap
+clean
+
+dfflibmap -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib
+clean
+
+read_verilog -specify basic_cells.v
+ltp

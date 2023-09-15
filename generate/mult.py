@@ -116,10 +116,9 @@ module {name}(
         if o_factors is None:
             str += f"    assign poly_out[%d] = 1'b0;\n" % o_idx;
         else:
-            str += f'    assign poly_out[%d] = ^{{ ' % o_idx
-            str += ", ".join(["poly_a[%d] & poly_b[%d]" % (x[0], x[1]) for x in o_factors])
-
-            str += " };\n"
+            str += f'    assign poly_out[%d] = ' % o_idx
+            str += " ^ ".join(["poly_a[%d] & poly_b[%d]" % (x[0], x[1]) for x in o_factors])
+            str += ";\n"
 
     str += f'endmodule'
 
@@ -365,7 +364,7 @@ if False:
 
 if False:
     gf = galois.GF(2**8)
-    s = verilog_poly_mul_mastrovito(gf)
+    s = verilog_poly_mult_mastrovito(gf)
     print(s)
 
 if True:
@@ -374,8 +373,8 @@ if True:
     parser.add_argument('-p', '--prefix', help='prefix string of generate verilog modules. Default is gf<order>.')
     parser.add_argument('-n', '--degree', default=8, help='Degree of the GF(2^n) field. Default is 8.')
     parser.add_argument('-a', '--all', action='store_true', help='Output all known Verilog modules.')
-    parser.add_argument('-d', '--mul_trad', action='store_true', help='Output traditional multiplier.')
-    parser.add_argument('-m', '--mul_mast', action='store_true', help='Output Mastrovito multiplier.')
+    parser.add_argument('-d', '--mult_trad', action='store_true', help='Output traditional multiplier.')
+    parser.add_argument('-m', '--mult_mast', action='store_true', help='Output Mastrovito multiplier.')
     parser.add_argument('--poly2power', action='store_true', help='Output poly2power.')
     parser.add_argument('--power2poly', action='store_true', help='Output power2poly.')
     parser.add_argument('--no_opt', action='store_true', help='Don''t optimize away constant primitive terms')
@@ -409,7 +408,7 @@ if True:
         s += verilog_gf_power2poly(gf, prefix=prefix)
         s += "\n"
 
-    if args.all or args.mul_trad:
+    if args.all or args.mult_trad:
         s += verilog_gf_poly_ab(gf, prefix=prefix)
         s += "\n"
         s += verilog_gf_poly_mod(gf, prefix=prefix, opt=opt)
@@ -417,7 +416,7 @@ if True:
         s += verilog_gf_poly_mult(gf, prefix=prefix)
         s += "\n"
 
-    if args.all or args.mul_mast:
+    if args.all or args.mult_mast:
         s += verilog_gf_poly_mult_mastrovito(gf, prefix=prefix, opt=opt)
         s += "\n"
 
