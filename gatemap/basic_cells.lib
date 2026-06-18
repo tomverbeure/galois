@@ -9,6 +9,30 @@ library(basic_cells){
         pin(Y) {
             direction : output;
             function : "A'";
+            timing() {
+                related_pin : "A";
+                timing_sense : negative_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
         }
   }
   
@@ -20,6 +44,30 @@ library(basic_cells){
         pin(Y) {
             direction : output;
             function : "A";
+            timing() {
+                related_pin : "A";
+                timing_sense : positive_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
         }
     }  
   
@@ -34,6 +82,54 @@ library(basic_cells){
         pin(Y) {
             direction: output;
             function : "(A * B)'";
+            timing() {
+                related_pin : "A";
+                timing_sense : negative_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
+            timing() {
+                related_pin : "B";
+                timing_sense : negative_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
         }
     }
 
@@ -48,6 +144,54 @@ library(basic_cells){
         pin(Y) {
             direction: output;
             function : "(A ^ B)";
+            timing() {
+                related_pin : "A";
+                timing_sense : non_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
+            timing() {
+                related_pin : "B";
+                timing_sense : non_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
         }
     }
 

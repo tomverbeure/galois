@@ -244,7 +244,7 @@ module {name}(
     return s
 
 #============================================================
-# Traditional Galois field multiplication
+# Traditional 2-stage Galois field multiplication
 #============================================================
 def verilog_gf_poly_mult(gf, prefix = None, name = None):
     if prefix is None:
@@ -334,7 +334,8 @@ def verilog_gf_poly_mult_mastrovito(gf, prefix = None, name = None, opt = True):
     # Step 2: Multiply M with B
     c_coefs = []
     for j in range(gf.degree):
-        c_j = SymSumVector([ SymFactor(M[i][j], SymSymbol(f"b[%d]"%i)) for i in range(gf.degree) ])
+        #c_j = SymSumVector([ SymFactor(M[i][j], SymSymbol(f"b[%d]"%i)) for i in range(gf.degree) ])
+        c_j = SymSum([ SymFactor(M[i][j], SymSymbol(f"b[%d]"%i)) for i in range(gf.degree) ])
         c_coefs.append(c_j)
 
     #print(m_coefs)
