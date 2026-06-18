@@ -97,6 +97,21 @@ def verilog_gf_poly_ab(gf, prefix = None, name = None):
     if name is None:
         name = f"{prefix}_poly_ab"
 
+    # output_factor contains 2*gf.degree-1 lists.
+    # Each list contains the multiplication (AND) of 1 bit from a and 1 bit from b.
+    output_factors = [ [] for _ in range(2 * gf.degree - 1)]
+
+    for a_idx in range(0,gf.degree):
+        for b_idx in range(0,gf.degree):
+            o_idx = a_idx + b_idx
+            output_factors[o_idx].append(SymFactor( SymSymbol(f"poly_a[{a_idx}]"),SymSymbol(f"poly_b[{b_idx}]")) )
+
+    outputs = [ SymSumVector(output_factor) for output_factor in output_factors ]
+
+    #for of in output_factors:
+    #    print(len(of))
+    #sys.exit(1)
+
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
 // Modulo reduction is not included
@@ -111,23 +126,14 @@ module {name}(
 
 ''' % (gf.degree-1, gf.degree-1, 2*gf.degree-2)
 
-    output_factors = [ None ] * (2*gf.degree-1)
+    for o_idx, output in enumerate(outputs):
+        #str += f'    assign poly_out[%d] = ' % o_idx
+        #str += " ^ ".join(["poly_a[%d] & poly_b[%d]" % (x[0], x[1]) for x in o_factors])
+        #str += ";\n"
 
-    for a_idx in range(0,gf.degree):
-        for b_idx in range(0,gf.degree):
-            o_idx = a_idx + b_idx
-            if output_factors[o_idx] is None:
-                output_factors[o_idx] = [ [a_idx, b_idx] ]
-            else:
-                output_factors[o_idx].append([a_idx, b_idx])
-
-    for o_idx, o_factors in enumerate(output_factors):
-        if o_factors is None:
-            str += f"    assign poly_out[%d] = 1'b0;\n" % o_idx;
-        else:
-            str += f'    assign poly_out[%d] = ' % o_idx
-            str += " ^ ".join(["poly_a[%d] & poly_b[%d]" % (x[0], x[1]) for x in o_factors])
-            str += ";\n"
+        str += f'    assign poly_out[%d] = ' % o_idx
+        str += output.flatten()
+        str += ";\n"
 
     str += f'endmodule'
 

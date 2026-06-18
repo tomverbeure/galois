@@ -72,3 +72,4 @@ class SymSumVector(SymNode):
     def flatten(self):
         s = ' ^ '.join(v.flatten() for v in self.vec)
         return s
+
