@@ -6,6 +6,9 @@ import argparse
 import galois
 from sym import *
 
+#============================================================
+# Convert from standard base to exponent representation
+#============================================================
 def verilog_gf_poly2power(gf, prefix = None, name = None):
     if prefix is None:
         prefix = f"gf%d" % gf.degree
@@ -42,6 +45,9 @@ endmodule
 
     return str
 
+#============================================================
+# Convert from exponent to standard base representation
+#============================================================
 def verilog_gf_power2poly(gf, prefix = None, name = None):
     if prefix is None:
         prefix = f"gf%d" % gf.degree
@@ -78,6 +84,9 @@ endmodule
 
     return str
 
+#============================================================
+# Polynomial multiplication of 2 values
+#============================================================
 def verilog_gf_poly_ab(gf, prefix = None, name = None):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
@@ -124,9 +133,16 @@ module {name}(
 
     return str
 
+#============================================================
+# Polynomial modulo
+#
+# Given an input vector d(x) with degree 2^n-1 and an irreducible polynomial p(x), 
+# calculate the d(x) mod p(x)
+#============================================================
 def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
-    SymSum.nr_sums  = 0
-    SymFactor.nr_facts = 0
+
+    SymSum.nr_sums      = 0
+    SymFactor.nr_facts  = 0
 
     if prefix is None:
         prefix = f"gf%d" % gf.degree
@@ -134,44 +150,49 @@ def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
     if name is None:
         name = f"{prefix}_poly_mod"
 
+    # Array with irreducible polynomial coefficients
     p_coefs = [ 0 ] * (gf.degree+1)
     for i in range(gf.degree+1):
         p_coefs[i] = (int(gf.irreducible_poly)>>i)&1
 
     # Input for a[3:0] * b[3:0] -> d[6:0]
     # Primitive poly: p[4:0]
+    # p[4] is always 1
     # 
-    #   d6       d5      d4      d3      d2      d1      d0
-    #   p4       p3      p2      p1      p0
+    # R[0]:  d6            d5           d4           d3           d2           d1           d0
+    #    +   d6          d6p3         d6p2         d6p1         d6p0  
+    #     ----------------------------------------------------------
+    # R[1]:   0       d5+d6p3      d4+d6p2      d3+d6p1      d2+d6p0           d1           d0
     #
-    # + d6p4     d6p3    d6p2    d6p1    d6p0  
-    # ----------------------------------------
-    #   d6       d5+d6p3 d4+d6p3 d3+d6p1 d2+d6p0 
-    #            p4      p3      p2      p1      p0
-    #
-    #                    p4      p3      p2      p1      p0
-    # ...
-   
-    R = [ SymSymbol(f"d[{i}]") for i in range (2*gf.degree-1) ] 
+    #         0       R[1][5]      R[1][4]      R[1][3]      R[1][3]      R[1][2]
+    #             +   R[1][5]   R[1][5].p3   R[1][5].p2   R[1][5].p2   R[1][5].p1  
+    #              --------------------------------------------------------------
+    # R[2]                  0          ...
 
-    #Trui Result for each step of the division
+   
+    # R is a 2-dimensional array with the resulting polynomial
+    # after each step of the division.
     R = [ [ SymZero() for _ in range (2*gf.degree-1) ] for _ in range(gf.degree) ]
 
-    for d in range(2*gf.degree-1):
-        R[0][d] = SymSymbol(f"d[{d}]")
+    # R[0][x] starts out with with the input operand d[x].
+    for x in range(2*gf.degree-1):
+        R[0][x] = SymSymbol(f"d[{x}]")
 
     r_coefs = [ ]
 
-    #for d_idx in reversed(range(gf.degree-1)):
     for step in range(1, gf.degree):
         d_idx = gf.degree-1-step
         d_msb = d_idx+gf.degree
 
+        # First copy the previous result. Some terms are overwritten.
         for d in range(2*gf.degree-1):
             R[step][d] = R[step-1][d]
 
         for p_idx in range(1, gf.degree+1):
             if opt:
+                # When optimization is on, only sum the 2 terms when the coefficient
+                # of the primitive is 1, otherwise we can just reuse the previous value (which
+                # we already filled in.)
                 if p_coefs[gf.degree-p_idx] == 1:
                     R[step][d_msb-p_idx] = SymSum(R[step-1][d_msb-p_idx], R[step-1][d_msb])
             else:
@@ -181,18 +202,21 @@ def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
                                 )
 
             if True:
-                r_coef_str = f"r_{step}_{d_msb-p_idx}"
+                # Intermediate values for cleaner and easier to debug code.
+                r_coef_str= f"r_{step}_{d_msb-p_idx}"
                 r_coef = SymSymbol(r_coef_str)
                 r_coefs.append([r_coef_str, R[step][d_msb-p_idx] ])
                 R[step][d_msb-p_idx] = r_coef
 
-    #for r in r_coefs:
-    #    print(r[0], "=", r[1].flatten())
-
-    #for (step, r) in enumerate(R):
-    #    print(f"Step {step}:")
-    #    for r_term in reversed(r):
-    #        print(r_term.flatten())
+    # Debug
+    if False:
+        for r in r_coefs:
+            print(r[0], "=", r[1].flatten())
+    
+        for (step, r) in enumerate(R):
+            print(f"Step {step}:")
+            for r_term in reversed(r):
+                print(r_term.flatten())
 
     s = f'''
 // Modulo reduction by primitive polynomial of a polynomial that was the result of a 
@@ -221,6 +245,9 @@ module {name}(
 
     return s
 
+#============================================================
+# Traditional Galois field multiplication
+#============================================================
 def verilog_gf_poly_mult(gf, prefix = None, name = None):
     if prefix is None:
         prefix = f"gf%d" % gf.degree
@@ -254,6 +281,9 @@ endmodule
     return s
 
 
+#============================================================
+# Mastrovito Galois field multiplication
+#============================================================
 def verilog_gf_poly_mult_mastrovito(gf, prefix = None, name = None, opt = True):
     SymSum.nr_sums  = 0
     SymFactor.nr_facts = 0
