@@ -106,11 +106,7 @@ def verilog_gf_poly_ab(gf, prefix = None, name = None):
             o_idx = a_idx + b_idx
             output_factors[o_idx].append(SymFactor( SymSymbol(f"poly_a[{a_idx}]"),SymSymbol(f"poly_b[{b_idx}]")) )
 
-    outputs = [ SymSumVector(output_factor) for output_factor in output_factors ]
-
-    #for of in output_factors:
-    #    print(len(of))
-    #sys.exit(1)
+    outputs = [ SymSum(output_factor) for output_factor in output_factors ]
 
     str = f'''
 // Polynomial multiplication of 2 GF numbers of the same order
@@ -127,10 +123,6 @@ module {name}(
 ''' % (gf.degree-1, gf.degree-1, 2*gf.degree-2)
 
     for o_idx, output in enumerate(outputs):
-        #str += f'    assign poly_out[%d] = ' % o_idx
-        #str += " ^ ".join(["poly_a[%d] & poly_b[%d]" % (x[0], x[1]) for x in o_factors])
-        #str += ";\n"
-
         str += f'    assign poly_out[%d] = ' % o_idx
         str += output.flatten()
         str += ";\n"
