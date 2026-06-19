@@ -1,14 +1,14 @@
+#NR_BITS 	= 4
+#GF		= 16
+
 NR_BITS 	= 8
 GF		= 256
 
 #NR_BITS 	= 10
 #GF		= 1024
 
-#NR_BITS 	= 16
-#GF		= 65536
-
-#NR_BITS 	= 4
-#GF		= 16
+NR_BITS 	= 16
+GF		= 65536
 
 CPLUSPLUS	= g++
 

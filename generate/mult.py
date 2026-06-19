@@ -187,38 +187,36 @@ def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
     # It starts with the input polynomial and then the higest value is selectively
     # appended to the current one.
 
-    print("p_coefs:", p_coefs)
-    print("len(p_coefs):", len(p_coefs))
-    print("gf.degree:", gf.degree)
+    #print("p_coefs:", p_coefs)
+    #print("len(p_coefs):", len(p_coefs))
+    #print("gf.degree:", gf.degree)
 
     R = [ [ SymSymbol(f"d[{i}]") ] for i in range (2*gf.degree-1) ]
 
-    print(list(reversed(R)))
+    #print(list(reversed(R)))
 
     # Step = [1,2,3]
     for step in range(1, gf.degree):
-        print("step:", step)
+        #print("step:", step)
 
         # d_msb = [6,5,4]
         d_msb   = 2*gf.degree-1 - step
 
-        print("    d_msb:", d_msb)
-        print("    d_msb_val:", R[d_msb])
+        #print("    d_msb:", d_msb)
+        #print("    d_msb_val:", R[d_msb])
 
         for p_idx in range(len(p_coefs)):
-            print(f"    p_idx: {p_idx}, p_coef[{p_idx}]: {p_coefs[p_idx]}")
+            #print(f"    p_idx: {p_idx}, p_coef[{p_idx}]: {p_coefs[p_idx]}")
             if p_coefs[p_idx] == 1:
                 # For the maximum value of p_idx, we're adding R[d_msb] + R[d_msb],
                 # which is always 0 and will never be used, but it's easier for debugging.
                 left_op     = R[d_msb - gf.degree + p_idx]
                 right_op    = R[d_msb]
-                print(f"        left_op={left_op}, right_op={right_op}")
+                #print(f"        left_op={left_op}, right_op={right_op}")
                 R[d_msb - gf.degree + p_idx] = left_op + right_op
 
-        for r_idx, r in enumerate(list(reversed(R))):
-            print(r_idx, r)
-
-    sys.exit(1)
+        #for r_idx, r in enumerate(list(reversed(R))):
+        #    print(r_idx, r)
 
     # If the same value is present multiple times, remove all of them if the count is
     # even. Otherwise, keep exactly 1.
@@ -230,8 +228,8 @@ def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
 
         outputs.append(SymSum(r_reduced))
 
-    print(outputs)
-    sys.exit(1)
+    #print(outputs)
+    #sys.exit(1)
 
     s = f'''
 // Modulo reduction by primitive polynomial of a polynomial that was the result of a 
@@ -258,76 +256,6 @@ module {name}(
 
     #print(s)
     #sys.exit(1)
-
-    return s
-
-
-
-
-    r_coefs = [ ]
-
-    for step in range(1, gf.degree):
-        d_idx = gf.degree-1-step
-        d_msb = d_idx+gf.degree
-
-        # First copy the previous result. Some terms are overwritten.
-        for d in range(2*gf.degree-1):
-            R[step][d] = R[step-1][d]
-
-        for p_idx in range(1, gf.degree+1):
-            if opt:
-                # When optimization is on, only sum the 2 terms when the coefficient
-                # of the primitive is 1, otherwise we can just reuse the previous value (which
-                # we already filled in.)
-                if p_coefs[gf.degree-p_idx] == 1:
-                    R[step][d_msb-p_idx] = SymSum(R[step-1][d_msb-p_idx], R[step-1][d_msb])
-            else:
-                R[step][d_msb-p_idx] = SymSum(
-                                    R[step-1][d_msb-p_idx], 
-                                    SymFactor(R[step-1][d_msb], SymSymbol(f"p[{gf.degree-p_idx}]"))
-                                )
-
-            if True:
-                # Intermediate values for cleaner and easier to debug code.
-                r_coef_str= f"r_{step}_{d_msb-p_idx}"
-                r_coef = SymSymbol(r_coef_str)
-                r_coefs.append([r_coef_str, R[step][d_msb-p_idx] ])
-                R[step][d_msb-p_idx] = r_coef
-
-    # Debug
-    if False:
-        for r in r_coefs:
-            print(r[0], "=", r[1].flatten())
-    
-        for (step, r) in enumerate(R):
-            print(f"Step {step}:")
-            for r_term in reversed(r):
-                print(r_term.flatten())
-
-    s = f'''
-// Modulo reduction by primitive polynomial of a polynomial that was the result of a 
-// poly_mult of 2 GF numbers
-//
-// XORs: {SymSum.nr_sums}
-// ANDs: {SymFactor.nr_facts}
-module {name}(
-    input      [{2*gf.degree-2}:0] poly_in,
-    output     [{gf.degree-1}:0] poly_out
-    );
-
-    wire [{2*gf.degree-2:0}:0] d = poly_in;
-    wire [{gf.degree}:0] p = 'h%x;
-
-''' % (int(gf.irreducible_poly))
-
-    for r in r_coefs:
-        s += f'    wire {r[0]} = {r[1].flatten()};\n'
-
-    s += "\n"
-    s += f'    assign poly_out = {{%s}};\n' % (',').join([r.flatten() for r in reversed(R[gf.degree-1][0:gf.degree])])
-
-    s += f'endmodule'
-
 
     return s
 

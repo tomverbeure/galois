@@ -13,7 +13,7 @@ stat
 tee -o ../build/gf65536_poly_mult_gtech.json stat -json
 
 dfflibmap -liberty ./basic_cells.lib
-abc -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib -D 1
 clean
 stat -liberty ./basic_cells.lib
 tee -o ../build/gf65536_poly_mult_gates.json stat -json -liberty ./basic_cells.lib
@@ -53,7 +53,7 @@ stat
 tee -o ../build/gf65536_poly_mult_mastrovito_gtech.json stat -json
 
 dfflibmap -liberty ./basic_cells.lib
-abc -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib -D 1
 clean
 stat -liberty ./basic_cells.lib
 tee -o ../build/gf65536_poly_mult_mastrovito_gates.json stat -json -liberty ./basic_cells.lib
@@ -90,7 +90,7 @@ techmap
 clean
 
 dfflibmap -liberty ./basic_cells.lib
-abc -liberty ./basic_cells.lib
+abc -liberty ./basic_cells.lib -D 1
 clean
 
 read_verilog -specify basic_cells.v
