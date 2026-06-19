@@ -6,6 +6,8 @@ import argparse
 import galois
 from sym import *
 
+from collections import Counter
+
 #============================================================
 # Convert from standard base to exponent representation
 #============================================================
@@ -163,18 +165,104 @@ def verilog_gf_poly_mod(gf, prefix = None, name = None, opt = True):
     # R[1]:   0       d5+d6p3      d4+d6p2      d3+d6p1      d2+d6p0           d1           d0
     #
     #         0       R[1][5]      R[1][4]      R[1][3]      R[1][3]      R[1][2]
-    #             +   R[1][5]   R[1][5].p3   R[1][5].p2   R[1][5].p2   R[1][5].p1  
+    #             +   R[1][5]   R[1][5].p3   R[1][5].p2   R[1][5].p1   R[1][5].p0  
+    #              --------------------------------------------------------------
+    # R[2]                  0          ...
+
+    # p[4:0] = 'b10011
+    # 
+    # R[0]:  d6            d5           d4           d3           d2           d1           d0
+    #    +   d6          d6p3         d6p2         d6p1         d6p0  
+    #     ----------------------------------------------------------
+    # R[1]:   0            d5          d4         d3+d6        d2+d6           d1           d0
+    #
+    #         0       R[1][5]      R[1][4]      R[1][3]      R[1][3]      R[1][2]
+    #             +   R[1][5]                                R[1][5]      R[1][5] 
     #              --------------------------------------------------------------
     # R[2]                  0          ...
 
    
-    # R is a 2-dimensional array with the resulting polynomial
-    # after each step of the division.
-    R = [ [ SymZero() for _ in range (2*gf.degree-1) ] for _ in range(gf.degree) ]
+    # R contains the division result. Each element has a list that contains
+    # terms that must be XOR'ed together.
+    # It starts with the input polynomial and then the higest value is selectively
+    # appended to the current one.
 
-    # R[0][x] starts out with with the input operand d[x].
-    for x in range(2*gf.degree-1):
-        R[0][x] = SymSymbol(f"d[{x}]")
+    print("p_coefs:", p_coefs)
+    print("len(p_coefs):", len(p_coefs))
+    print("gf.degree:", gf.degree)
+
+    R = [ [ SymSymbol(f"d[{i}]") ] for i in range (2*gf.degree-1) ]
+
+    print(list(reversed(R)))
+
+    # Step = [1,2,3]
+    for step in range(1, gf.degree):
+        print("step:", step)
+
+        # d_msb = [6,5,4]
+        d_msb   = 2*gf.degree-1 - step
+
+        print("    d_msb:", d_msb)
+        print("    d_msb_val:", R[d_msb])
+
+        for p_idx in range(len(p_coefs)):
+            print(f"    p_idx: {p_idx}, p_coef[{p_idx}]: {p_coefs[p_idx]}")
+            if p_coefs[p_idx] == 1:
+                # For the maximum value of p_idx, we're adding R[d_msb] + R[d_msb],
+                # which is always 0 and will never be used, but it's easier for debugging.
+                left_op     = R[d_msb - gf.degree + p_idx]
+                right_op    = R[d_msb]
+                print(f"        left_op={left_op}, right_op={right_op}")
+                R[d_msb - gf.degree + p_idx] = left_op + right_op
+
+        for r_idx, r in enumerate(list(reversed(R))):
+            print(r_idx, r)
+
+    sys.exit(1)
+
+    # If the same value is present multiple times, remove all of them if the count is
+    # even. Otherwise, keep exactly 1.
+    outputs = []
+    for r in R[0:gf.degree]:
+        # Hash with value and the number of them
+        r_counts    = Counter(r)
+        r_reduced   = [x for x in r_counts if r_counts[x] % 2 == 1]
+
+        outputs.append(SymSum(r_reduced))
+
+    print(outputs)
+    sys.exit(1)
+
+    s = f'''
+// Modulo reduction by primitive polynomial of a polynomial that was the result of a 
+// poly_mult of 2 GF numbers
+//
+// XORs: {SymSum.nr_sums}
+// ANDs: {SymFactor.nr_facts}
+module {name}(
+    input      [{2*gf.degree-2}:0] poly_in,
+    output     [{gf.degree-1}:0] poly_out
+    );
+
+    wire [{2*gf.degree-2:0}:0] d = poly_in;
+    wire [{gf.degree}:0] p = 'h%x;
+
+''' % (int(gf.irreducible_poly))
+
+    for o_idx, output in enumerate(outputs):
+        s += f'    assign poly_out[%d] = ' % o_idx
+        s += output.flatten()
+        s += ";\n"
+
+    s += f'endmodule'
+
+    #print(s)
+    #sys.exit(1)
+
+    return s
+
+
+
 
     r_coefs = [ ]
 
