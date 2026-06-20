@@ -1,16 +1,21 @@
-NR_BITS 	= 8
-GF		= 256
+#NR_BITS 	    ?= 8
+#GF		    ?= 256
+#MAST_LATENCY_OPT   ?= 0
 
-#NR_BITS 	= 10
-#GF		= 1024
+#NR_BITS 	    ?= 10
+#GF		    ?= 1024
+#MAST_LATENCY_OPT   ?= 0
 
-#NR_BITS 	= 16
-#GF		= 65536
+NR_BITS 	    = 16
+GF		    = 65536
+MAST_LATENCY_OPT    ?= 1
 
-#NR_BITS 	= 4
-#GF		= 16
+#NR_BITS 	    = 4
+#GF		    = 16
+#MAST_LATENCY_OPT   ?= 0
 
 CPLUSPLUS	= g++
+MAST_LATENCY_OPT_ARG = $(if $(filter 1 yes true on,$(MAST_LATENCY_OPT)),--mast_latency_opt,)
 
 
 all: ./build/tb_gf_arith_mastrovito ./build/tb_gf_arith #./build/tb_gf_arith_ref
@@ -44,8 +49,7 @@ synth: ./build/gf$(GF)_arith.v
 
 
 ./build/gf$(GF)_arith.v: ./generate/mult.py ./generate/sym.py
-	./generate/mult.py -n $(NR_BITS) --output $@ --prefix gf$(GF) --mult_trad --mult_mast
+	./generate/mult.py -n $(NR_BITS) --output $@ --prefix gf$(GF) --mult_trad --mult_mast $(MAST_LATENCY_OPT_ARG)
 
 clean:
 	\rm -f build/*
-

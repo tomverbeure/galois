@@ -133,6 +133,68 @@ library(basic_cells){
         }
     }
 
+    cell (AND2) {
+        area : 4;
+        pin(A) {
+            direction : input;
+        }
+        pin(B) {
+            direction : input;
+        }
+        pin(Y) {
+            direction: output;
+            function : "(A * B)";
+            timing() {
+                related_pin : "A";
+                timing_sense : negative_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
+            timing() {
+                related_pin : "B";
+                timing_sense : negative_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
+        }
+    }
+
     cell (XOR2) {
         area : 6;
         pin(A) {
@@ -194,6 +256,69 @@ library(basic_cells){
             }
         }
     }
+
+    cell (XNOR2) {
+        area : 6;
+        pin(A) {
+            direction : input;
+        }
+        pin(B) {
+            direction : input;
+        }
+        pin(Y) {
+            direction: output;
+            function : "(A ^ B)'";
+            timing() {
+                related_pin : "A";
+                timing_sense : non_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
+            timing() {
+                related_pin : "B";
+                timing_sense : non_unate;
+                cell_rise() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                cell_fall() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                rise_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+                fall_transition() {
+                    index_1("1");
+                    index_2("1");
+                    values("1");
+                }
+            }
+        }
+    }
+
 
     cell (DFF) {
         area : 8;
