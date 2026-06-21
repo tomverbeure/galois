@@ -1,14 +1,14 @@
-#NR_BITS 	    ?= 8
-#GF		    ?= 256
-#MAST_LATENCY_OPT   ?= 0
+NR_BITS 	    ?= 8
+GF		    ?= 256
+MAST_LATENCY_OPT   ?= 1
 
 #NR_BITS 	    ?= 10
 #GF		    ?= 1024
 #MAST_LATENCY_OPT   ?= 0
 
-NR_BITS 	    = 16
-GF		    = 65536
-MAST_LATENCY_OPT    ?= 1
+#NR_BITS 	    = 16
+#GF		    = 65536
+#MAST_LATENCY_OPT    ?= 1
 
 #NR_BITS 	    = 4
 #GF		    = 16

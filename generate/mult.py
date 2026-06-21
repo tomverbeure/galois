@@ -387,10 +387,7 @@ def verilog_gf_poly_mult_mastrovito(gf, prefix = None, name = None, latency_opt 
             c_coef_str = f"c_%d_%d" % (c_idx, step)
             c_coef = SymSymbol(c_coef_str)
             c_sum_coefs.append(WireExpr(c_coef_str, SymSum(signal_a.expr, signal_b.expr)))
-            signals.append(Signal(
-                c_coef,
-                max(signal_a.delay, signal_b.delay) + 1
-            ))
+            signals.append(Signal( c_coef, max(signal_a.delay, signal_b.delay) + 1))
             step += 1
 
         return signals[0]
@@ -437,15 +434,29 @@ def verilog_gf_poly_mult_mastrovito(gf, prefix = None, name = None, latency_opt 
 
                     # CHECK 2: use an equivalent previously-calculated XOR pair
                     # when it improves delay.
-                    for cell_a in cells:
-                        needed_xor_set = cell_a.xor_set ^ new_xor_set
-                        if needed_xor_set in cell_by_xor_set:
-                            cell_b  = cell_by_xor_set[needed_xor_set]
-                            delay   = calc_delay(cell_a, cell_b)
-                            if delay < best_delay:
-                                best_a      = cell_a
-                                best_b      = cell_b
-                                best_delay  = delay
+                    if False:
+                        # Direct implementation of the paper, but not efficient because
+                        # it doesn't use the already existing cell_by_xor_set hash table.
+                        for cell_a in cells:
+                            for cell_b in cells:
+                                possible_xor_set    = cell_a.xor_set ^ cell_b.xor_set
+    
+                                if possible_xor_set == new_xor_set:
+                                    delay   = calc_delay(cell_a, cell_b)
+                                    if delay < best_delay:
+                                        best_a      = cell_a
+                                        best_b      = cell_b
+                                        best_delay  = delay
+                    else:
+                        for cell_a in cells:
+                            needed_xor_set = cell_a.xor_set ^ new_xor_set
+                            if needed_xor_set in cell_by_xor_set:
+                                cell_b  = cell_by_xor_set[needed_xor_set]
+                                delay   = calc_delay(cell_a, cell_b)
+                                if delay < best_delay:
+                                    best_a      = cell_a
+                                    best_b      = cell_b
+                                    best_delay  = delay
 
                     M[row][col] = connect_new_xor(row, col, best_a, best_b, new_xor_set)
 
@@ -530,6 +541,7 @@ if True:
     parser.add_argument('-o', '--output', help='name of output verilog file. When not given, output is sent to stdout.')
     parser.add_argument('-p', '--prefix', help='prefix string of generate verilog modules. Default is gf<order>.')
     parser.add_argument('-n', '--degree', default=8, help='Degree of the GF(2^n) field. Default is 8.')
+    parser.add_argument('--poly', help='Primitive polynomial as a hex value (e.g. 0x11b).')
     parser.add_argument('-a', '--all', action='store_true', help='Output all known Verilog modules.')
     parser.add_argument('-d', '--mult_trad', action='store_true', help='Output traditional multiplier.')
     parser.add_argument('-m', '--mult_mast', action='store_true', help='Output Mastrovito multiplier.')
@@ -553,8 +565,10 @@ if True:
     else:
         output = open(args.output, 'wt')
 
-
-    gf = galois.GF(2**int(args.degree))
+    if args.poly:
+        gf = galois.GF(2**int(args.degree), irreducible_poly=int(args.poly, 16))
+    else:
+        gf = galois.GF(2**int(args.degree))
 
     s = ""
     s += ''.join([f"// %s\n" % x for x in gf.properties.split('\n')])
